@@ -34,6 +34,13 @@ npm run copy    # copy trading only (requires COPY_TARGET_WALLETS)
 npm run both    # both simultaneously
 ```
 
+The bot defaults to `DRY_RUN=true`, which runs the detection, filtering,
+risk, execution, and exit pipeline without submitting transactions. Keep this
+setting for demos and validation. Live trading requires setting
+`DRY_RUN=false` and explicitly setting
+`LIVE_TRADING_CONFIRMATION=I_UNDERSTAND_LIVE_TRADING` after reviewing the
+wallet and limits.
+
 ## Before you run it with real money
 
 1. **Verify `PUMPFUN_PROGRAM_ID` in `src/constants.ts`** against a

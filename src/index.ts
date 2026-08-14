@@ -8,7 +8,7 @@ import { startSnipeMode } from "./modes/snipeMode.js";
 import { startCopyTradeMode } from "./modes/copyTradeMode.js";
 
 async function main() {
-  logger.info(`Starting pump.fun bot in "${config.mode}" mode`);
+  logger.info(`Starting Sniper in "${config.mode}" mode (${config.dryRun ? "DRY RUN" : "LIVE TRADING"})`);
   logger.warn(
     "Free-tier data layer (logsSubscribe, not Yellowstone gRPC) — expect latency behind dedicated sniper bots, and expect 429s under load on shared public RPCs. Prove out the strategy here, then swap the data layer in src/data/ for a paid Geyser stream."
   );

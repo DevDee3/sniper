@@ -1,5 +1,5 @@
 {
-  "name": "pumpfun-bot",
+  "name": "sniper",
   "version": "0.1.0",
   "description": "Solana pump.fun sniping + copy trading bot (free-tier data layer, swappable to paid Yellowstone gRPC later)",
   "type": "module",

@@ -29,6 +29,7 @@ export interface EnrichedTokenData {
   holderCount?: number;
   riskScore?: number;
   devHoldingPct?: number;
+  liquidityUsd?: number;
 }
 
 export interface TradeDecision {

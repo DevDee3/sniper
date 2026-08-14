@@ -70,6 +70,11 @@ export class Executor {
    */
   async buy(mint: string, sizeSol: number): Promise<{ signature: string; tokenAmount: BN } | null> {
     try {
+      if (config.dryRun) {
+        const tokenAmount = new BN(Math.round(sizeSol * 1e9));
+        logger.trade(`[DRY RUN] BUY ${mint}: ${sizeSol} SOL (no transaction sent)`);
+        return { signature: `dry-run-buy-${Date.now()}`, tokenAmount };
+      }
       const mintPk = new PublicKey(mint);
       const user = this.wallet.publicKey;
 
@@ -119,6 +124,11 @@ export class Executor {
   /** Sell an entire position. Returns the SOL received, or null on failure. */
   async sellAll(mint: string, tokenAmount: BN): Promise<{ signature: string; solReceived: number } | null> {
     try {
+      if (config.dryRun) {
+        const solReceived = tokenAmount.toNumber() / 1e9;
+        logger.trade(`[DRY RUN] SELL ${mint}: ~${solReceived.toFixed(4)} SOL (no transaction sent)`);
+        return { signature: `dry-run-sell-${Date.now()}`, solReceived };
+      }
       const mintPk = new PublicKey(mint);
       const user = this.wallet.publicKey;
 

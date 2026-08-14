@@ -3,7 +3,7 @@ import { PUMPFUN_PROGRAM_ID, LOG_MARKERS } from "../constants.js";
 import { PumpfunEvent } from "../types.js";
 import { logger } from "../logger.js";
 import { throttledRpcCall } from "../data/rpcThrottle.js";
-import { fetchTokenMetadata } from "./metadata";
+import { fetchTokenMetadata } from "./metadata.js";
 
 const PUMP_PROGRAM = new PublicKey(PUMPFUN_PROGRAM_ID);
 

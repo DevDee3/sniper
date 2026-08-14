@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Logs, Context } from "@solana/web3.js";
+import { Connection, PublicKey, Logs, Context, Commitment } from "@solana/web3.js";
 import { logger } from "../logger.js";
 
 export type LogHandler = (logs: Logs, ctx: Context) => void;
@@ -19,13 +19,14 @@ export type LogHandler = (logs: Logs, ctx: Context) => void;
 export function subscribeProgramLogs(
   connection: Connection,
   programId: PublicKey,
-  onLogs: LogHandler
+  onLogs: LogHandler,
+  commitment: Commitment = "confirmed"
 ): number {
-  logger.info(`Subscribing to logs for program ${programId.toBase58()}`);
+  logger.info(`Subscribing to ${commitment} logs for program ${programId.toBase58()}`);
   return connection.onLogs(programId, (logs, ctx) => {
     if (logs.err) return; // skip failed txs, nothing to act on
     onLogs(logs, ctx);
-  }, "confirmed");
+  }, commitment);
 }
 
 /**

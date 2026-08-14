@@ -29,6 +29,8 @@ export async function fetchTokenEnrichment(
       pool?.market === "pumpfun" && typeof pool?.curvePercentage === "number"
         ? pool.curvePercentage
         : undefined;
+    const liquidityUsd =
+      typeof pool?.liquidity?.usd === "number" ? pool.liquidity.usd : undefined;
 
     return {
       mint,
@@ -36,6 +38,7 @@ export async function fetchTokenEnrichment(
       holderCount: data?.holders ?? undefined,
       riskScore: data?.risk?.score ?? undefined,
       devHoldingPct: data?.risk?.dev?.percentage ?? undefined,
+      liquidityUsd,
     };
   } catch (err) {
     logger.warn(`Solana Tracker enrichment error for ${mint}:`, err);

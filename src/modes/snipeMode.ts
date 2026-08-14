@@ -18,6 +18,8 @@ export function startSnipeMode(
 ) {
   const programId = new PublicKey(PUMPFUN_PROGRAM_ID);
 
+  // Processed commitment reduces launch-detection latency. The parsed
+  // transaction and actual execution still use confirmed RPC calls below.
   subscribeProgramLogs(connection, programId, async (logs) => {
     try {
       const kind = classifyLogs(logs.logs);
@@ -52,7 +54,7 @@ export function startSnipeMode(
       // means the exit monitor stops watching any open positions too.
       logger.error("Snipe handler error (continuing):", err);
     }
-  });
+  }, "processed");
 
   logger.info("Snipe mode active");
 }

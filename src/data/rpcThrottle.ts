@@ -1,44 +1,45 @@
 import { logger } from "../logger.js";
 
-const MIN_INTERVAL_MS = Number(process.env.RPC_MIN_INTERVAL_MS ?? 250); // ~4 req/s ceiling
+const MIN_INTERVAL_MS = Number(process.env.RPC_MIN_INTERVAL_MS ?? 250);
 
 let queue: Promise<void> = Promise.resolve();
 let lastCallAt = 0;
 
 /**
- * Runs `fn` no sooner than MIN_INTERVAL_MS after the previous throttled
- * call. This does NOT make the free public RPC fast — it just keeps the
- * bot under the rate limit instead of 429-storming and crashing. If
- * you're still seeing constant 429s with this in place, the fix isn't a
- * bigger interval, it's a real RPC provider (see README's "upgrading the
- * data layer" section) — the public endpoint's ceiling is just low.
+ * Serializes public-RPC reads to avoid rate-limit storms. Transient network
+ * failures get a few short retries within the same queue item, so a retry
+ * cannot deadlock behind the request that initiated it.
  */
 export function throttledRpcCall<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
   const run = async (): Promise<T> => {
-    const wait = Math.max(0, lastCallAt + MIN_INTERVAL_MS - Date.now());
-    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-    lastCallAt = Date.now();
+    for (let attempt = 0; ; attempt++) {
+      const wait = Math.max(0, lastCallAt + MIN_INTERVAL_MS - Date.now());
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+      lastCallAt = Date.now();
 
-    try {
-      return await fn();
-    } catch (err: any) {
-      const is429 = err?.message?.includes("429") || err?.message?.includes("Too Many Requests");
-      if (is429 && retries > 0) {
-        const backoff = MIN_INTERVAL_MS * (4 - retries) * 2; // small linear backoff
-        logger.warn(`RPC 429 — backing off ${backoff}ms (${retries} retries left)`);
-        await new Promise((r) => setTimeout(r, backoff));
-        return throttledRpcCall(fn, retries - 1);
+      try {
+        return await fn();
+      } catch (err: any) {
+        const message = String(err?.message ?? err);
+        const retryable =
+          message.includes("429") ||
+          message.includes("Too Many Requests") ||
+          message.includes("fetch failed") ||
+          message.includes("Connect Timeout") ||
+          message.includes("ECONNRESET");
+        if (!retryable || attempt >= retries) throw err;
+
+        const backoff = Math.min(500, 75 * (attempt + 1));
+        logger.warn(`Transient RPC error; retrying in ${backoff}ms (${retries - attempt} retries left)`);
+        await new Promise((resolve) => setTimeout(resolve, backoff));
       }
-      throw err;
     }
   };
 
-  // Chain onto the shared queue so calls never overlap, regardless of
-  // how many events fire concurrently.
   const result = queue.then(run);
   queue = result.then(
     () => undefined,
-    () => undefined // don't let one failure break the chain for later calls
+    () => undefined
   );
   return result;
 }
